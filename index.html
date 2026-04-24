@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unsubscribe</title>
+  <style>
+    body { font-family: Arial; max-width: 500px; 
+           margin: 100px auto; text-align: center; }
+    button { background: #dc3545; color: white; 
+             padding: 12px 24px; border: none; 
+             border-radius: 6px; cursor: pointer; 
+             font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>İleti Listesinden Çıkış</h2>
+  <p id="email-display"></p>
+  <button onclick="unsubscribe()">
+    Listeden Çıkar
+  </button>
+  <p id="message"></p>
+
+  <script>
+    const SUPABASE_URL = 'https://ohixzhoxwaoltsdoszhj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaXh6aG94d2FvbHRzZG9zemhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NzA1NzksImV4cCI6MjA4NDI0NjU3OX0.hcW2W7UvN6tidStPsPdm3TsSamnERHCBNRAc5zIxBsc';
+    
+    const params = new URLSearchParams(window.location.search);
+    const email = atob(params.get('e') || '');
+    document.getElementById('email-display').textContent = email;
+
+    async function unsubscribe() {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/email_unsubscribes`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify({ email: email })
+        }
+      );
+      if (res.ok) {
+        document.getElementById('message').textContent = 
+          '✅ Listemizden çıkarıldınız.';
+      }
+    }
+  </script>
+</body>
+</html>
