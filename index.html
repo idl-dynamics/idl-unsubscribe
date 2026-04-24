@@ -1,48 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Unsubscribe</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribe - IDL Attendance</title>
   <style>
-    body { font-family: Arial; max-width: 500px; 
-           margin: 100px auto; text-align: center; }
-    button { background: #dc3545; color: white; 
-             padding: 12px 24px; border: none; 
-             border-radius: 6px; cursor: pointer; 
-             font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      max-width: 450px;
+      text-align: center;
+    }
+    h2 { margin-top: 0; color: #1a1a1a; font-size: 24px; }
+    p { color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 24px; }
+    .email-display { font-weight: 600; color: #0056b3; background: #eef4ff; padding: 4px 8px; border-radius: 4px; }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    /* Çıkmaktan vazgeçme butonu (Dikkat çekici) */
+    .btn-primary { background: #0056b3; color: white; }
+    .btn-primary:hover { background: #004494; transform: translateY(-1px); }
+    
+    /* Çıkış yapma butonu (Daha az dikkat çekici) */
+    .btn-danger { background: white; color: #dc3545; border: 1px solid #dc3545; }
+    .btn-danger:hover { background: #fdf5f6; }
+    
+    /* Yeniden abone olma butonu */
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; transform: translateY(-1px); }
+
+    .hidden { display: none; }
+    .emoji { font-size: 48px; margin-bottom: 16px; }
   </style>
 </head>
 <body>
-  <h2>İleti Listesinden Çıkış</h2>
-  <p id="email-display"></p>
-  <button onclick="unsubscribe()">
-    Listeden Çıkar
-  </button>
-  <p id="message"></p>
+
+  <div class="container" id="main-card">
+    
+    <div id="view-unsubscribe">
+      <div class="emoji">🥺</div>
+      <h2>Wait, are you sure?</h2>
+      <p>We're sad to see you go! You are about to unsubscribe <br> <span class="email-display" id="email-text"></span> <br> from IDL Attendance updates.</p>
+      <p style="font-size: 14px; color: #777;">You might miss out on free tools and early access to features that make managing large lecture halls effortless.</p>
+      
+      <button class="btn btn-primary" onclick="keepSubscribed()">Nevermind, keep me on the list</button>
+      <button class="btn btn-danger" onclick="unsubscribe()" id="unsub-btn">Yes, Unsubscribe Me</button>
+    </div>
+
+    <div id="view-resubscribe" class="hidden">
+      <div class="emoji">💔</div>
+      <h2>You've been unsubscribed.</h2>
+      <p>We won't send any more emails to <span class="email-display" id="email-text-done"></span>.</p>
+      <p style="font-size: 14px;">Made a mistake or changed your mind? You can always come back.</p>
+      <button class="btn btn-success" onclick="resubscribe()" id="resub-btn">Oops, Resubscribe me!</button>
+    </div>
+
+    <div id="view-welcome-back" class="hidden">
+      <div class="emoji">🎉</div>
+      <h2>Welcome back!</h2>
+      <p>Awesome! We're thrilled you decided to stay. Thanks for helping us improve academic attendance tools.</p>
+    </div>
+
+  </div>
 
   <script>
+    // SUPABASE BİLGİLERİNİ BURAYA GİRMEYİ UNUTMA
     const SUPABASE_URL = 'https://ohixzhoxwaoltsdoszhj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaXh6aG94d2FvbHRzZG9zemhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NzA1NzksImV4cCI6MjA4NDI0NjU3OX0.hcW2W7UvN6tidStPsPdm3TsSamnERHCBNRAc5zIxBsc';
     
     const params = new URLSearchParams(window.location.search);
-    const email = atob(params.get('e') || '');
-    document.getElementById('email-display').textContent = email;
+    let email = '';
+    try {
+       email = atob(params.get('e') || '');
+    } catch(e) {
+       email = 'Unknown Email';
+    }
+    
+    document.getElementById('email-text').textContent = email;
+    document.getElementById('email-text-done').textContent = email;
 
+    // Listede Kalma (Vazgeçme) Butonu
+    function keepSubscribed() {
+        document.getElementById('view-unsubscribe').classList.add('hidden');
+        document.getElementById('view-welcome-back').classList.remove('hidden');
+    }
+
+    // Listeden Çıkma (Supabase'e Yazma)
     async function unsubscribe() {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/email_unsubscribes`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
-            'Prefer': 'resolution=merge-duplicates'
-          },
-          body: JSON.stringify({ email: email })
-        }
-      );
+      if(!email || email === 'Unknown Email') return;
+      const btn = document.getElementById('unsub-btn');
+      btn.textContent = "Processing...";
+      
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_unsubscribes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({ email: email })
+      });
+      
       if (res.ok) {
-        document.getElementById('message').textContent = 
-          '✅ Listemizden çıkarıldınız.';
+        document.getElementById('view-unsubscribe').classList.add('hidden');
+        document.getElementById('view-resubscribe').classList.remove('hidden');
+      } else {
+         btn.textContent = "Error! Try again.";
+      }
+    }
+
+    // Tekrar Abone Olma (Supabase'den Silme)
+    async function resubscribe() {
+      if(!email || email === 'Unknown Email') return;
+      const btn = document.getElementById('resub-btn');
+      btn.textContent = "Processing...";
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_unsubscribes?email=eq.${email}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+        }
+      });
+
+      if (res.ok) {
+        document.getElementById('view-resubscribe').classList.add('hidden');
+        document.getElementById('view-welcome-back').classList.remove('hidden');
+      } else {
+         btn.textContent = "Error! Try again.";
       }
     }
   </script>
