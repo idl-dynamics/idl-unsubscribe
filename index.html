@@ -141,7 +141,8 @@
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Accept-Profile': 'app_attendance',
-          'Content-Profile': 'app_attendance'
+          'Content-Profile': 'app_attendance',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ p_email: email })
       });
