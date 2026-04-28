@@ -130,26 +130,28 @@
     }
 
     async function resubscribe() {
-      if(!email || email === 'Unknown Email') return;
-      const btn = document.getElementById('resub-btn');
-      btn.textContent = "Processing...";
+  if(!email || email === 'Unknown Email') return;
+  const btn = document.getElementById('resub-btn');
+  btn.textContent = "Processing...";
 
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_unsubscribes?email=eq.${encodeURIComponent(email)}`, {
-        method: 'DELETE',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Accept-Profile': 'app_attendance'   // ← EKLENDİ
-        }
-      });
-
-      if (res.ok) {
-        document.getElementById('view-resubscribe').classList.add('hidden');
-        document.getElementById('view-welcome-back').classList.remove('hidden');
-      } else {
-         btn.textContent = "Error! Try again.";
-      }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/email_unsubscribes?email=eq.${email}`, {
+    method: 'DELETE',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Accept-Profile': 'app_attendance'
     }
+  });
+
+  // 404 veya 200 — her ikisi de "kayıt yok veya silindi" anlamına gelir
+  if (res.ok || res.status === 404) {
+    document.getElementById('view-resubscribe').classList.add('hidden');
+    document.getElementById('view-welcome-back').classList.remove('hidden');
+  } else {
+    const errText = await res.text();
+    btn.textContent = `Error ${res.status}: ${errText}`;
+  }
+}
 </script>
 </body>
 </html>
