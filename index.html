@@ -134,20 +134,19 @@
       const btn = document.getElementById('resub-btn');
       btn.textContent = "Processing...";
     
-      // Sadece @ işaretini encode et
-      const encodedEmail = email.replace('@', '%40');
-    
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_unsubscribes?email=eq.${encodedEmail}`, {
-        method: 'DELETE',
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/remove_unsubscribe`, {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Accept-Profile': 'app_attendance',
-          'Content-Type': 'application/json'
-        }
+          'Content-Profile': 'app_attendance'
+        },
+        body: JSON.stringify({ p_email: email })
       });
     
-      if (res.ok || res.status === 404) {
+      if (res.ok) {
         document.getElementById('view-resubscribe').classList.add('hidden');
         document.getElementById('view-welcome-back').classList.remove('hidden');
       } else {
